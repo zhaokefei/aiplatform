@@ -10,9 +10,7 @@ import (
 	cfg "github.com/zhaokefei/aiplatform/config"
 )
 
-
 var MysqlClient *gorm.DB
-
 
 func init() {
 	NewMysqlClient()
@@ -20,10 +18,9 @@ func init() {
 	MysqlClient.AutoMigrate(&User{}, &Role{})
 }
 
-
 func NewMysqlClient() {
 	if MysqlClient != nil {
-		return 
+		return
 	}
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",

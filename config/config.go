@@ -2,28 +2,26 @@ package config
 
 import (
 	"errors"
-	"os"
 	"log"
+	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
-
 type RedisConfig struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
 	Password string `yaml:"password"`
-	DB int `yaml:"db"`
+	DB       int    `yaml:"db"`
 }
 
 type MysqlConfig struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 }
-
 
 type Config struct {
 	Redis RedisConfig `yaml:"redis"`
@@ -31,6 +29,7 @@ type Config struct {
 }
 
 var Cfg Config
+
 const CONFIG_PATH = "config.yaml"
 
 func init() {
@@ -40,7 +39,6 @@ func init() {
 		panic(err)
 	}
 }
-
 
 func ReLoad() error {
 	f, err := os.Open(CONFIG_PATH)
@@ -57,7 +55,6 @@ func ReLoad() error {
 	log.Println("load config success", Cfg)
 	return nil
 }
-
 
 func Load() error {
 	if Cfg != (Config{}) {

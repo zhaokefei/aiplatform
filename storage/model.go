@@ -2,7 +2,6 @@ package storage
 
 import "gorm.io/gorm"
 
-
 type User struct {
 	gorm.Model
 	Username  string `gorm:"uniqueindex;not null;size:255"`
@@ -10,7 +9,7 @@ type User struct {
 	Age       string
 	Sex       string
 	Email     string `gorm:"uniqueindex;not null;size:255"`
-	Role      int	 
+	Role      int
 	Status    string `gorm:"not null;default:active"`
 	LastLogin int64
 }

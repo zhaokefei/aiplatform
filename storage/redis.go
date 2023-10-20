@@ -8,14 +8,11 @@ import (
 	conf "github.com/zhaokefei/aiplatform/config"
 )
 
-
-var RedisClient *redis.Client 
-
+var RedisClient *redis.Client
 
 func init() {
 	NewRedisClient()
 }
-
 
 func NewRedisClient() {
 	if RedisClient != nil {

@@ -6,12 +6,10 @@ import (
 	DB "github.com/zhaokefei/aiplatform/storage"
 )
 
-
 type User struct {
 	Username string
 	UserInfo *DB.UserOps
 }
-
 
 func NewUser(username string) (*User, error) {
 	uo, err := DB.NewUserOps(username)
@@ -23,7 +21,6 @@ func NewUser(username string) (*User, error) {
 		UserInfo: uo,
 	}, nil
 }
-
 
 // Login is a function that authenticates a user with a username and password and returns a token and an error.
 //
@@ -45,8 +42,6 @@ func (u *User) Login(password string) (token string, err error) {
 	return token, nil
 }
 
-
-
 // Logout logs out a user.
 //
 // It takes a username as a parameter and returns the logout status
@@ -57,7 +52,6 @@ func (u *User) Logout() (status bool, err error) {
 	}
 	return u.UserInfo.Logout()
 }
-
 
 // IsLogin checks if the user with the given username is logged in.
 //
@@ -77,7 +71,6 @@ func (u *User) IsLogin() (status bool, err error) {
 	return true, nil
 }
 
-
 // Register is a function that registers a user with a username, password, and additional parameters.
 //
 // It takes the following parameters:
@@ -94,6 +87,6 @@ func Register(username, password, again_password, email string, params map[strin
 		return false, errors.New("username or password is empty")
 	} else if password != again_password {
 		return false, errors.New("password not match")
-	} 
+	}
 	return DB.UserRegister(username, password, email, params)
 }

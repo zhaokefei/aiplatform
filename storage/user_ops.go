@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"github.com/google/uuid"
 )
 
 var ctx = context.Background()
@@ -19,7 +19,7 @@ type UserInterface interface {
 
 type UserOps struct {
 	Username string
-	AuthKey string
+	AuthKey  string
 	UserData *User
 }
 
@@ -33,11 +33,11 @@ type UserOps struct {
 // Returns:
 // - *UserOps: The UserOps instance.
 // - error: An error if the user doesn't exist or if there was an error retrieving the user information.
-func NewUserOps(username string) (*UserOps, error)  {
+func NewUserOps(username string) (*UserOps, error) {
 	ops := &UserOps{
 		Username: username,
-		AuthKey: "auth:login:" + username,
-	}	
+		AuthKey:  "auth:login:" + username,
+	}
 	// 检查User 是否存在
 	user, err := ops.UserInfo()
 	if err != nil || user == nil {
@@ -48,7 +48,6 @@ func NewUserOps(username string) (*UserOps, error)  {
 	return ops, nil
 }
 
-
 // Logined returns the token associated with a logged-in user and any error encountered.
 //
 // It takes no parameters.
@@ -57,10 +56,9 @@ func (uo *UserOps) Logined() (string, error) {
 	val, err := RedisClient.Get(ctx, uo.AuthKey).Result()
 	if err != nil || err == redis.Nil {
 		return "", nil
-	} 
+	}
 	return val, nil
 }
-
 
 // Logout logs out the user.
 //
@@ -73,7 +71,6 @@ func (uo *UserOps) Logout() (bool, error) {
 	}
 	return true, nil
 }
-
 
 // Login verifies the given password and generates a session ID for the user.
 //
@@ -95,7 +92,6 @@ func (uo *UserOps) Login(password string) (string, error) {
 	return SessionID, nil
 }
 
-
 // UserInfo retrieves the user information.
 //
 // It does not take any parameters.
@@ -115,7 +111,6 @@ func (uo *UserOps) UserInfo() (*User, error) {
 	return &user, nil
 }
 
-
 // UserRegister registers a new user with the provided username, password, email, and additional parameters.
 //
 // The function takes the following parameters:
@@ -128,8 +123,8 @@ func (uo *UserOps) UserInfo() (*User, error) {
 // in case of any errors.
 func UserRegister(username, password, email string, params map[string]string) (bool, error) {
 	// 内置函数，获取默认值
-	MapDefault := func (key string, defaultValue string) string  {
-		value, ok := params[key]; 
+	MapDefault := func(key string, defaultValue string) string {
+		value, ok := params[key]
 		if !ok {
 			return defaultValue
 		}
@@ -139,21 +134,18 @@ func UserRegister(username, password, email string, params map[string]string) (b
 	user := User{
 		Username: username,
 		Password: password,
-		Email: email,
-		Age: MapDefault("age", ""),
-		Sex: MapDefault("sex", ""),
-
-	} 
+		Email:    email,
+		Age:      MapDefault("age", ""),
+		Sex:      MapDefault("sex", ""),
+	}
 	// 创建User
 	result := MysqlClient.Create(&user)
-	err := result.Error 
+	err := result.Error
 	if err != nil {
 		return false, err
 	}
 	return true, result.Error
 }
-
-
 
 func GenSessionId() string {
 	return uuid.New().String()

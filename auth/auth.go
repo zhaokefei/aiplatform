@@ -1,6 +1,5 @@
 package auth
 
-
 type Auth interface {
 	// 登陆
 	Login(string) (string, error)

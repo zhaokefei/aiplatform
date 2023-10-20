@@ -37,7 +37,6 @@ func HandleLogin(c *gin.Context) {
 	})
 }
 
-
 func HandleRegister(c *gin.Context) {
 	var Body types.RegisterBody
 	err := c.BindJSON(&Body)
@@ -66,10 +65,9 @@ func HandleRegister(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{
-		"status": true,	
-	})	
+		"status": true,
+	})
 }
-
 
 func HandleLogined(c *gin.Context) {
 	var Body types.LoginedBody
@@ -98,7 +96,6 @@ func HandleLogined(c *gin.Context) {
 		"status": status,
 	})
 }
-
 
 func HandleLogout(c *gin.Context) {
 	var Body types.LoginedBody

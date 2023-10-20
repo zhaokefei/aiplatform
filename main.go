@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/zhaokefei/aiplatform/api"
-
 )
 
 func main() {
