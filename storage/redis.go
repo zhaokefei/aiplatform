@@ -5,7 +5,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	conf "github.com/zhaokefei/aiplatform/config"
+	cfg "github.com/zhaokefei/aiplatform/config"
 )
 
 var RedisClient *redis.Client
@@ -19,9 +19,9 @@ func NewRedisClient() {
 		return
 	}
 	Client := redis.NewClient(&redis.Options{
-		Addr:     conf.Cfg.Redis.Host + ":" + conf.Cfg.Redis.Port,
-		Password: conf.Cfg.Redis.Password,
-		DB:       conf.Cfg.Redis.DB,
+		Addr:     cfg.Cfg.Redis.Host + ":" + cfg.Cfg.Redis.Port,
+		Password: cfg.Cfg.Redis.Password,
+		DB:       cfg.Cfg.Redis.DB,
 	})
 	log.Println("connect redis success")
 	// 赋值给全局变量

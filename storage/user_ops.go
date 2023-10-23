@@ -11,12 +11,6 @@ import (
 
 var ctx = context.Background()
 
-type UserInterface interface {
-	Login(string) (string, error)
-	Logined() (string, error)
-	UserInfo() (*User, error)
-}
-
 type UserOps struct {
 	Username string
 	AuthKey  string
@@ -111,6 +105,27 @@ func (uo *UserOps) UserInfo() (*User, error) {
 	return &user, nil
 }
 
+// SetRole sets the role of a user.
+//
+// name: the name of the role to be set.
+// Returns a boolean indicating whether the role was set successfully and an error if any.
+func (uo *UserOps) SetRole(name string) (bool, error) {
+	var role Role
+	// 判断是否是符合条件的role类型
+	if !IsValidRole(name) {
+		return false, errors.New("invalid role")
+	}
+	result := MysqlClient.Where(&Role{RoleName: name}).First(&role)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return false, result.Error
+		}
+		return false, result.Error
+	}
+	uo.UserData.Role = int(role.ID)
+	return true, nil
+}
+
 // UserRegister registers a new user with the provided username, password, email, and additional parameters.
 //
 // The function takes the following parameters:
@@ -130,6 +145,10 @@ func UserRegister(username, password, email string, params map[string]string) (b
 		}
 		return value
 	}
+	role, err := RoleInfo(RegularUser)
+	if err != nil {
+		return false, errors.New("未找到合适的用户角色")
+	}
 	// 构造user信息
 	user := User{
 		Username: username,
@@ -137,10 +156,11 @@ func UserRegister(username, password, email string, params map[string]string) (b
 		Email:    email,
 		Age:      MapDefault("age", ""),
 		Sex:      MapDefault("sex", ""),
+		Role:     role.ID,
 	}
 	// 创建User
 	result := MysqlClient.Create(&user)
-	err := result.Error
+	err = result.Error
 	if err != nil {
 		return false, err
 	}

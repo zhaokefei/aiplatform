@@ -16,6 +16,11 @@ func init() {
 	NewMysqlClient()
 	// 自动同步Table
 	MysqlClient.AutoMigrate(&User{}, &Role{})
+	for _, v := range Roles {
+		if !IsSet(v) {
+			NewRole(v)
+		}
+	}
 }
 
 func NewMysqlClient() {

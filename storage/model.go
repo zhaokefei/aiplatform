@@ -16,7 +16,7 @@ type User struct {
 
 type Role struct {
 	gorm.Model
-	ID       int      `gorm:"primaryKey"`
-	RoleName UserRole `gorm:"uniqueindex;not null;size:255"`
-	Status   string   `gorm:"not null;default:active"`
+	ID       int    `gorm:"primaryKey"`
+	RoleName string `gorm:"uniqueindex;not null;size:255"`
+	Status   string `gorm:"not null;default:active"`
 }
