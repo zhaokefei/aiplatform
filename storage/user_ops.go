@@ -3,6 +3,8 @@ package storage
 import (
 	"context"
 	"errors"
+	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -46,12 +48,13 @@ func NewUserOps(username string) (*UserOps, error) {
 //
 // It takes no parameters.
 // It returns a string, the token associated with the logged-in user, and an error, if any.
-func (uo *UserOps) Logined() (string, error) {
+func (uo *UserOps) Logined() (string, int, error) {
 	val, err := RedisClient.Get(ctx, uo.AuthKey).Result()
 	if err != nil || err == redis.Nil {
-		return "", nil
+		return "", 0, nil
 	}
-	return val, nil
+	expire, _ := RedisClient.TTL(ctx, uo.AuthKey).Result()
+	return val, int(expire), nil
 }
 
 // Logout logs out the user.
@@ -59,10 +62,12 @@ func (uo *UserOps) Logined() (string, error) {
 // This function does not take any parameters.
 // It returns a boolean value indicating whether the logout was successful or not, and an error if there was any.
 func (uo *UserOps) Logout() (bool, error) {
-	err := RedisClient.Del(ctx, uo.AuthKey).Err()
-	if err != nil {
-		return false, err
+	sessionID, err := RedisClient.Get(ctx, uo.AuthKey).Result()
+	if err != nil && err != redis.Nil {
+		return false, nil
 	}
+	RedisClient.Del(ctx, uo.AuthKey).Err()
+	RedisClient.Del(ctx, sessionID).Err()
 	return true, nil
 }
 
@@ -74,16 +79,37 @@ func (uo *UserOps) Logout() (bool, error) {
 // Returns:
 // - string: The generated session ID.
 // - error: An error if the password is incorrect or there is an issue with the Redis client.
-func (uo *UserOps) Login(password string) (string, error) {
+func (uo *UserOps) Login(password string) (string, int, error) {
 	if password != uo.UserData.Password {
-		return "", errors.New("password is wrong")
+		return "", 0, errors.New("password is wrong")
 	}
-	SessionID := GenSessionId()
-	err := RedisClient.Set(ctx, uo.AuthKey, SessionID, 24*3600).Err()
+	expire := 24 * 3600
+	SessionID, err := uo.setLoginInfo(expire)
+	UserLogined(SessionID)	
+
+	return SessionID, expire, err
+}
+
+
+func (uo *UserOps) setLoginInfo(expire int) (string, error) {
+	sessionID := GenSessionId()
+	userID := uo.UserData.ID
+	// 默认expire
+	if expire == 0 {
+		expire = int(24 * 3600)
+	}
+	err := RedisClient.Set(ctx, uo.AuthKey, sessionID, time.Duration(expire) * time.Second).Err()
 	if err != nil {
+		log.Println("set login info auth key error: ", err)
 		return "", err
 	}
-	return SessionID, nil
+
+	err = RedisClient.Set(ctx, sessionID, userID, time.Duration(expire) * time.Second).Err()
+	if err != nil {
+		log.Println("set login info session key error: ", err)
+		return "", err
+	}
+	return sessionID, nil
 }
 
 // UserInfo retrieves the user information.
@@ -125,6 +151,25 @@ func (uo *UserOps) SetRole(name string) (bool, error) {
 	uo.UserData.Role = int(role.ID)
 	return true, nil
 }
+
+
+// HasPermission checks if the user has the required permission.
+//
+// It takes in an integer representing the role type and returns a boolean value indicating whether the user has the required permission or not.
+func (uo *UserOps) HasPermission(funcRoleType int) bool {
+	// 判断权限
+	return uo.UserData.Role >= funcRoleType
+}
+
+
+func UserLogined(sessionID string) bool {
+	userID, err := RedisClient.Get(ctx, sessionID).Result()
+	if err != nil || err == redis.Nil {
+		return false
+	}
+	return userID != ""
+}
+
 
 // UserRegister registers a new user with the provided username, password, email, and additional parameters.
 //

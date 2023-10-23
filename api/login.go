@@ -25,15 +25,18 @@ func HandleLogin(c *gin.Context) {
 		})
 		return
 	}
-	token, err := user.Login(body.Password)
+	token, expire, err := user.Login(body.Password)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": "login failed: " + err.Error(),
 		})
 		return
 	}
+	// 设置cookie
+	c.SetCookie("session-id", token, expire, "/", "", false, true)
 	c.JSON(200, gin.H{
-		"session": token,
+		"token": token,
+		"expire": expire,
 	})
 }
 
@@ -124,4 +127,33 @@ func HandleLogout(c *gin.Context) {
 		"status": status,
 	})
 
+}
+
+
+func HandleUserRole(c *gin.Context) {
+	var Body types.UserRoleBody
+	err := c.BindJSON(&Body)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	user, err := auth.NewUser(Body.Username)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "username doesn't exist",
+		})
+		return
+	}
+	status, err := user.UserInfo.SetRole(Body.Rolename)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": errors.New("check login failed"),
+		})
+		return
+	}	
+	c.JSON(200, gin.H{
+		"status": status,
+	})
 }

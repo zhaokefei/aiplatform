@@ -11,6 +11,7 @@ func NewRole(name string) (*Role, error) {
 		return nil, errors.New("invalid role")
 	}
 	role := Role{
+		RoleType: RoleMapper[name],
 		RoleName: name,
 		Status:   "active",
 	}
@@ -41,6 +42,7 @@ func IsValidRole(name string) bool {
 	}
 	return false
 }
+
 
 func RoleInfo(name string) (*Role, error) {
 	var role Role

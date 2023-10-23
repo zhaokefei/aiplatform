@@ -31,15 +31,15 @@ func NewUser(username string) (*User, error) {
 // Returns:
 // - token: a string representing the authentication token.
 // - err: an error indicating any authentication errors.
-func (u *User) Login(password string) (token string, err error) {
+func (u *User) Login(password string) (token string, expire int, err error) {
 	if u.Username == "" || password == "" {
-		return "", errors.New("username or password is empty")
+		return "", 0, errors.New("username or password is empty")
 	}
-	token, err = u.UserInfo.Logined()
+	token, expire, err = u.UserInfo.Logined()
 	if err != nil || token == "" {
 		return u.UserInfo.Login(password)
 	}
-	return token, nil
+	return token, expire, nil
 }
 
 // Logout logs out a user.
@@ -64,7 +64,7 @@ func (u *User) IsLogin() (status bool, err error) {
 	if u.Username == "" {
 		return false, errors.New("username is empty")
 	}
-	token, err := u.UserInfo.Logined()
+	token, _, err := u.UserInfo.Logined()
 	if err != nil || token == "" {
 		return false, nil
 	}

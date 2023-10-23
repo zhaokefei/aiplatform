@@ -17,3 +17,9 @@ type RegisterBody struct {
 type LoginedBody struct {
 	Username string `json:"username"`
 }
+
+
+type UserRoleBody struct {
+	Username string `json:"username"`
+	Rolename string `json:"rolename"`
+}
