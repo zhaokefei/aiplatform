@@ -85,11 +85,10 @@ func (uo *UserOps) Login(password string) (string, int, error) {
 	}
 	expire := 24 * 3600
 	SessionID, err := uo.setLoginInfo(expire)
-	UserLogined(SessionID)	
+	UserLogined(SessionID)
 
 	return SessionID, expire, err
 }
-
 
 func (uo *UserOps) setLoginInfo(expire int) (string, error) {
 	sessionID := GenSessionId()
@@ -98,13 +97,13 @@ func (uo *UserOps) setLoginInfo(expire int) (string, error) {
 	if expire == 0 {
 		expire = int(24 * 3600)
 	}
-	err := RedisClient.Set(ctx, uo.AuthKey, sessionID, time.Duration(expire) * time.Second).Err()
+	err := RedisClient.Set(ctx, uo.AuthKey, sessionID, time.Duration(expire)*time.Second).Err()
 	if err != nil {
 		log.Println("set login info auth key error: ", err)
 		return "", err
 	}
 
-	err = RedisClient.Set(ctx, sessionID, userID, time.Duration(expire) * time.Second).Err()
+	err = RedisClient.Set(ctx, sessionID, userID, time.Duration(expire)*time.Second).Err()
 	if err != nil {
 		log.Println("set login info session key error: ", err)
 		return "", err
@@ -121,7 +120,7 @@ func (uo *UserOps) UserInfo() (*User, error) {
 	if uo.UserData != nil {
 		return uo.UserData, nil
 	}
-	result := MysqlClient.Where("Username = ?", uo.Username).First(&user)
+	result := DBClient.Where("Username = ?", uo.Username).First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, result.Error
@@ -141,7 +140,7 @@ func (uo *UserOps) SetRole(name string) (bool, error) {
 	if !IsValidRole(name) {
 		return false, errors.New("invalid role")
 	}
-	result := MysqlClient.Where(&Role{RoleName: name}).First(&role)
+	result := DBClient.Where(&Role{RoleName: name}).First(&role)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return false, result.Error
@@ -152,7 +151,6 @@ func (uo *UserOps) SetRole(name string) (bool, error) {
 	return true, nil
 }
 
-
 // HasPermission checks if the user has the required permission.
 //
 // It takes in an integer representing the role type and returns a boolean value indicating whether the user has the required permission or not.
@@ -161,7 +159,6 @@ func (uo *UserOps) HasPermission(funcRoleType int) bool {
 	return uo.UserData.Role >= funcRoleType
 }
 
-
 func UserLogined(sessionID string) bool {
 	userID, err := RedisClient.Get(ctx, sessionID).Result()
 	if err != nil || err == redis.Nil {
@@ -169,7 +166,6 @@ func UserLogined(sessionID string) bool {
 	}
 	return userID != ""
 }
-
 
 // UserRegister registers a new user with the provided username, password, email, and additional parameters.
 //
@@ -204,7 +200,7 @@ func UserRegister(username, password, email string, params map[string]string) (b
 		Role:     role.ID,
 	}
 	// 创建User
-	result := MysqlClient.Create(&user)
+	result := DBClient.Create(&user)
 	err = result.Error
 	if err != nil {
 		return false, err

@@ -15,7 +15,7 @@ func NewRole(name string) (*Role, error) {
 		RoleName: name,
 		Status:   "active",
 	}
-	result := MysqlClient.Create(&role)
+	result := DBClient.Create(&role)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -24,7 +24,7 @@ func NewRole(name string) (*Role, error) {
 
 func IsSet(name string) bool {
 	var role Role
-	result := MysqlClient.Where(&Role{RoleName: name}).First(&role)
+	result := DBClient.Where(&Role{RoleName: name}).First(&role)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return false
@@ -43,10 +43,9 @@ func IsValidRole(name string) bool {
 	return false
 }
 
-
 func RoleInfo(name string) (*Role, error) {
 	var role Role
-	result := MysqlClient.Where(&Role{RoleName: name}).First(&role)
+	result := DBClient.Where(&Role{RoleName: name}).First(&role)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, result.Error

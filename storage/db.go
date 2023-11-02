@@ -10,12 +10,12 @@ import (
 	cfg "github.com/zhaokefei/aiplatform/config"
 )
 
-var MysqlClient *gorm.DB
+var DBClient *gorm.DB
 
 func init() {
 	NewMysqlClient()
 	// 自动同步Table
-	MysqlClient.AutoMigrate(&User{}, &Role{})
+	DBClient.AutoMigrate(&User{}, &Role{})
 	for _, v := range Roles {
 		if !IsSet(v) {
 			NewRole(v)
@@ -24,7 +24,7 @@ func init() {
 }
 
 func NewMysqlClient() {
-	if MysqlClient != nil {
+	if DBClient != nil {
 		return
 	}
 
@@ -36,11 +36,11 @@ func NewMysqlClient() {
 		cfg.Cfg.Mysql.Database,
 	)
 
-	Client, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	client, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 	log.Println("connect mysql success")
 	// 赋值给全局变量
-	MysqlClient = Client
+	DBClient = client
 }

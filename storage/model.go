@@ -14,6 +14,7 @@ type User struct {
 	LastLogin int64
 }
 
+
 type Role struct {
 	gorm.Model
 	ID       int    `gorm:"primaryKey"`
