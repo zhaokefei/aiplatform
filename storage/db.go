@@ -23,7 +23,7 @@ func init() {
 	Cfg = cfg
 	NewDBClient()
 	// 自动同步Table
-	DBClient.AutoMigrate(&User{}, &Role{})
+	DBClient.AutoMigrate(&User{}, &Role{}, &App{}, &AppCategory{})
 	for _, v := range Roles {
 		if !IsSet(v) {
 			NewRole(v)
@@ -31,6 +31,8 @@ func init() {
 	}
 	// 创建ADMIN USER
 	RegisterAdmin()
+	// 创建初始化应用
+	RegisterApps()
 }
 
 func NewDBClient() {
