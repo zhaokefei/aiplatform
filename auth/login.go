@@ -11,13 +11,13 @@ type User struct {
 	UserInfo *DB.UserOps
 }
 
-func NewUser(username string) (*User, error) {
-	uo, err := DB.NewUserOps(username)
+func NewUser(username string, session_id string) (*User, error) {
+	uo, err := DB.NewUserOps(username, session_id)
 	if err != nil && uo == nil {
 		return nil, errors.New("username doesn't exist")
 	}
 	return &User{
-		Username: username,
+		Username: uo.Username,
 		UserInfo: uo,
 	}, nil
 }

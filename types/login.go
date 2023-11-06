@@ -14,10 +14,6 @@ type RegisterBody struct {
 	Age           string `json:"age"`
 }
 
-type LoginedBody struct {
-	Username string `json:"username"`
-}
-
 
 type UserRoleBody struct {
 	Username string `json:"username"`

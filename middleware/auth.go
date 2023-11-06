@@ -35,3 +35,27 @@ func Auth() gin.HandlerFunc {
 
 	}
 }
+
+
+func AdminAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// session-id
+		sessionID, _ := c.Cookie("session-id")
+		// 判断是不是admin用户
+		user, err := storage.GetUserBySessionID(sessionID)
+		if err != nil {
+			c.JSON(401, gin.H{
+				"error": "未找到对应的用户",
+			})
+			c.Abort()
+		}
+		if user.Role != storage.SuperAdminID {
+			c.JSON(401, gin.H{
+				"error": "权限不足",
+			})
+			c.Abort()
+		}
+		c.Next()
+
+	}
+}

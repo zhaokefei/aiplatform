@@ -10,10 +10,18 @@ import (
 	cfg "github.com/zhaokefei/aiplatform/config"
 )
 
+var Cfg cfg.Config
 var DBClient *gorm.DB
 
 func init() {
-	NewMysqlClient()
+	log.Println("storage init")
+	cfg, err := cfg.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	// 赋值
+	Cfg = cfg
+	NewDBClient()
 	// 自动同步Table
 	DBClient.AutoMigrate(&User{}, &Role{})
 	for _, v := range Roles {
@@ -21,19 +29,21 @@ func init() {
 			NewRole(v)
 		}
 	}
+	// 创建ADMIN USER
+	RegisterAdmin()
 }
 
-func NewMysqlClient() {
+func NewDBClient() {
 	if DBClient != nil {
 		return
 	}
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		cfg.Cfg.Mysql.Username,
-		cfg.Cfg.Mysql.Password,
-		cfg.Cfg.Mysql.Host,
-		cfg.Cfg.Mysql.Port,
-		cfg.Cfg.Mysql.Database,
+		Cfg.Mysql.Username,
+		Cfg.Mysql.Password,
+		Cfg.Mysql.Host,
+		Cfg.Mysql.Port,
+		Cfg.Mysql.Database,
 	)
 
 	client, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})

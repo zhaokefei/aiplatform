@@ -28,37 +28,30 @@ type Config struct {
 	Mysql MysqlConfig `yaml:"mysql"`
 }
 
-var Cfg Config
-
 const CONFIG_PATH = "config.yaml"
 
-func init() {
-	err := Load()
-	if err != nil {
-		log.Fatal(err)
-		panic(err)
-	}
-}
 
-func ReLoad() error {
-	f, err := os.Open(CONFIG_PATH)
+func LoadConfig() (cfg Config, err error) {
+	var f *os.File
+	path := os.Getenv("GEE_CONFIG_PATH")
+	log.Println("CONFIG_PATH", path)
+	if path != "" {
+		f, err = os.Open(path)
+	} else {
+		f, err = os.Open(CONFIG_PATH)
+	}
+
 	if err != nil {
-		return err
+		return cfg, err
 	}
 	defer f.Close()
 
-	err = yaml.NewDecoder(f).Decode(&Cfg)
+	err = yaml.NewDecoder(f).Decode(&cfg)
 	if err != nil {
-		return errors.New("unmarshal config file failed")
+		return cfg, errors.New("unmarshal config file failed")
 	}
 
-	log.Println("load config success", Cfg)
-	return nil
+	log.Println("load config success", cfg)
+	return cfg, nil
 }
 
-func Load() error {
-	if Cfg != (Config{}) {
-		return nil
-	}
-	return ReLoad()
-}

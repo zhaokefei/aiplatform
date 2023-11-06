@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,19 +30,35 @@ type UserOps struct {
 // Returns:
 // - *UserOps: The UserOps instance.
 // - error: An error if the user doesn't exist or if there was an error retrieving the user information.
-func NewUserOps(username string) (*UserOps, error) {
-	ops := &UserOps{
-		Username: username,
-		AuthKey:  "auth:login:" + username,
+func NewUserOps(username string, session_id string) (*UserOps, error) {
+	if username == "" {
+		if session_id == "" {
+			return nil, errors.New("username and session_id is empty")
+		}
+		user, err := GetUserBySessionID(session_id)
+		if err != nil {
+			return nil, err
+		}
+		return &UserOps{
+			Username: user.Username,
+			AuthKey:  "auth:login:" + user.Username,
+		}, nil
+
+
+	} else {
+		ops := &UserOps{
+			Username: username,
+			AuthKey:  "auth:login:" + username,
+		}
+		// 检查User 是否存在
+		user, err := ops.UserInfo()
+		if err != nil || user == nil {
+			return nil, err
+		}
+		// 更新UserData
+		ops.UserData = user
+		return ops, nil
 	}
-	// 检查User 是否存在
-	user, err := ops.UserInfo()
-	if err != nil || user == nil {
-		return nil, err
-	}
-	// 更新UserData
-	ops.UserData = user
-	return ops, nil
 }
 
 // Logined returns the token associated with a logged-in user and any error encountered.
@@ -116,11 +133,11 @@ func (uo *UserOps) setLoginInfo(expire int) (string, error) {
 // It does not take any parameters.
 // It returns a pointer to a User struct and an error.
 func (uo *UserOps) UserInfo() (*User, error) {
-	var user User
+	var user = User{Username: uo.Username, Status: "active"}
 	if uo.UserData != nil {
 		return uo.UserData, nil
 	}
-	result := DBClient.Where("Username = ?", uo.Username).First(&user)
+	result := DBClient.First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, result.Error
@@ -208,6 +225,52 @@ func UserRegister(username, password, email string, params map[string]string) (b
 	return true, result.Error
 }
 
+
+func RegisterAdmin() {
+	if _, err := NewUserOps("admin", ""); err != nil {
+		user := User{
+			Username: "admin",
+			Password: "admin",
+			Email:    "admin@qq.com",
+			Role:     SuperAdminID,
+		}
+		result := DBClient.Create(&user)
+		if result.Error != nil {
+			log.Println("register admin error: ", result.Error)
+		}
+	}
+}
+
+
 func GenSessionId() string {
 	return uuid.New().String()
+}
+
+
+func GetUserBySessionID(session_id string) (*User, error) {
+	userID, err := RedisClient.Get(ctx, session_id).Result()
+	if err != nil {
+		return nil, err
+	}
+	// 转换为整数
+	uid, err := strconv.Atoi(userID)
+	if err != nil {
+		return nil, err
+	}
+	var user = User{ID: uid, Status: "active"}
+	result := DBClient.First(&user, uid)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
+
+func GetUsers(limit int, offset int) ([]User, error) {
+	var users []User
+	result := DBClient.Find(&users).Limit(limit).Offset(offset)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return users, nil
 }

@@ -54,3 +54,13 @@ func RoleInfo(name string) (*Role, error) {
 	}
 	return &role, nil
 }
+
+
+func GetRoles(userRole int) ([]Role, error) {
+	var roles []Role
+	result := DBClient.Where("id <= ?", userRole).Find(&roles).Order("id")
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return roles, nil
+}
